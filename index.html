@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Riders FC Players Profile</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@600;700&display=swap" rel="stylesheet">
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Inter', sans-serif;
+      background: linear-gradient(to right, #0f2027, #203a43, #2c5364);
+      color: white;
+    }
+    header {
+      background: #111;
+      padding: 20px;
+      text-align: center;
+      font-size: 2rem;
+      color: #FFD700;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.5);
+    }
+    footer {
+      background: #111;
+      text-align: center;
+      padding: 10px;
+      color: #ccc;
+    }
+    .players-container {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 20px;
+      padding: 20px;
+    }
+    .player-card {
+      perspective: 1000px;
+      width: 300px;
+    }
+    .flip-inner {
+      width: 100%;
+      transform-style: preserve-3d;
+      transition: transform 1s;
+      position: relative;
+    }
+    .player-card.flipped .flip-inner {
+      transform: rotateY(180deg);
+    }
+    .flip-front, .flip-back {
+      backface-visibility: hidden;
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      border-radius: 15px;
+      overflow: hidden;
+      box-shadow: 0 10px 20px rgba(0,0,0,0.4);
+    }
+    .flip-back {
+      transform: rotateY(180deg);
+    }
+    .flip-front img, .flip-back img {
+      width: 100%;
+      height: 350px;
+      object-fit: cover;
+      border-bottom: 1px solid #ddd;
+    }
+    .player-details {
+      padding: 15px;
+      background: white;
+      color: #333;
+    }
+    .player-details h3 {
+      margin: 0 0 10px;
+      font-size: 24px;
+      font-weight: 700;
+      letter-spacing: 1px;
+    }
+    .explore-btn {
+      display: inline-block;
+      margin-top: 10px;
+      padding: 10px 20px;
+      background: linear-gradient(to right, #ff512f, #dd2476);
+      color: white;
+      border-radius: 25px;
+      text-decoration: none;
+      font-weight: bold;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+      transition: transform 0.2s;
+    }
+    .explore-btn:hover {
+      transform: scale(1.1);
+    }
+  </style>
+</head>
+<body>
+<header>Riders Football Club</header>
+<div class="players-container" id="players-container"></div>
+<footer>&copy; 2025 Riders FC. All rights reserved.</footer>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
+  import { getFirestore, collection, getDocs, doc, getDoc } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyAFsHg9fK6IDnHbuxmBleEfIIfVGsuLDik",
+    authDomain: "profile-b825d.firebaseapp.com",
+    projectId: "profile-b825d",
+    storageBucket: "profile-b825d.firebasestorage.app",
+    messagingSenderId: "925276859161",
+    appId: "1:925276859161:web:194c60f6dbd9f1ef8bf388"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+  const playersContainer = document.getElementById("players-container");
+
+  async function fetchPlayers() {
+    const querySnapshot = await getDocs(collection(db, "players"));
+    querySnapshot.forEach(async (docSnap) => {
+      const data = docSnap.data();
+      const dashboardRef = doc(db, "dashboards", docSnap.id);
+      const dashboardSnap = await getDoc(dashboardRef);
+      const dashboardExists = dashboardSnap.exists();
+
+      const playerCard = document.createElement("div");
+      playerCard.classList.add("player-card");
+
+      playerCard.innerHTML = `
+        <div class="flip-inner">
+          <div class="flip-front">
+            <img src="${data.picture}" alt="${data.name}">
+            <div class="player-details">
+              <h3>${data.name}</h3>
+              <p>DOB: ${data.dob}</p>
+              <p>Height: ${data.height}</p>
+              <p>Number: ${data.number}</p>
+              <p>Position: ${data.position}</p>
+              ${dashboardExists ? `<a href="dashboard.html?id=${docSnap.id}" target="_blank" class="explore-btn">Explore More</a>` : "<p style='color: red;'>Dashboard Coming Soon</p>"}
+            </div>
+          </div>
+          <div class="flip-back">
+            <img src="${data.backPicture || data.picture}" alt="${data.name} Back">
+            <div class="player-details">
+              <h3>${data.name}</h3>
+              <p>Player Profile Back View</p>
+            </div>
+          </div>
+        </div>
+      `;
+      playersContainer.appendChild(playerCard);
+
+      setInterval(() => {
+        playerCard.classList.toggle("flipped");
+      }, 5000);
+    });
+  }
+
+  fetchPlayers();
+</script>
+</body>
+</html>
